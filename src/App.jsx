@@ -48,6 +48,24 @@ const App = () => {
         }
     };
 
+    const handleUpdateBook = async () => {
+        try {
+            const response = await axios.get('http://localhost:5087/api/Book');
+            setBooks(response.data);
+        } catch (error) {
+            console.error('Error updating books:', error);
+        }
+    };
+
+    const handleDeleteBook = async (id) => {
+        try {
+            const response = await axios.get('http://localhost:5087/api/Book');
+            setBooks(response.data);
+        } catch (error) {
+            console.error('Error deleting books:', error);
+        }
+    };
+
     const handleChange = (event) => {
         const { name, value } = event.target;
         setNewBook({ ...newBook, [name]: value });
@@ -77,7 +95,7 @@ const App = () => {
             <Grid container spacing={3} sx={{ marginTop: 4 }}>
                 {books.map((book) => (
                     <Grid item xs={12} sm={6} md={4} key={book.id}>
-                        <BookCard book={book} />
+                        <BookCard book={book} onUpdate={handleUpdateBook} onDelete={handleDeleteBook} />
                     </Grid>
                 ))}
             </Grid>
