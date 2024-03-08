@@ -7,6 +7,7 @@ const App = () => {
     const [books, setBooks] = useState([]);
     const [showAddBookModal, setShowAddBookModal] = useState(false);
     const [newBook, setNewBook] = useState({});
+    const [newBookImage, setNewBookImage] = useState(null);
 
     useEffect(() => {
         const fetchBooks = async () => {
@@ -23,26 +24,37 @@ const App = () => {
 
     const handleAddBook = async () => {
         try {
-            // Construir el objeto de libro con el formato correcto
             const formattedNewBook = {
                 id: 0,
                 title: newBook.title,
                 author: newBook.author,
                 created: newBook.created,
-                image: newBook.image
+                image: newBookImage ? newBookImage.name : ''
             };
 
+            // Primero, enviamos el libro al backend sin la imagen
             await axios.post('http://localhost:5087/api/Book', formattedNewBook);
 
-            // Recargar la lista de libros después de agregar un nuevo libro
+            // Si hay una imagen seleccionada, la subimos al backend
+            if (newBookImage) {
+                const formData = new FormData();
+                formData.append('file', newBookImage);
+
+                await axios.post('http://localhost:5087/api/Image', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+            }
+
+            // Después de subir el libro y la imagen (si existe), actualizamos la lista de libros
             const response = await axios.get('http://localhost:5087/api/Book');
             setBooks(response.data);
 
-            // Ocultar el modal después de agregar el libro
+            // Limpiamos los estados
             setShowAddBookModal(false);
-
-            // Limpiar los campos del nuevo libro
             setNewBook({});
+            setNewBookImage(null);
         } catch (error) {
             console.error('Error adding book:', error);
         }
@@ -83,15 +95,28 @@ const App = () => {
                 Agregar libro
             </Button>
             <Modal open={showAddBookModal} onClose={() => setShowAddBookModal(false)}>
-                <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', bgcolor: 'background.paper', p: 4, width: 400, maxWidth: '90%' }}>
+                <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', bgcolor: 'background.paper', p: 4, width: 500, maxWidth: '90%' }}>
                     <Typography variant="h6" gutterBottom>Agregar libro</Typography>
-                    <TextField name="title" label="Título" fullWidth onChange={handleChange} />
-                    <TextField name="author" label="Autor" fullWidth onChange={handleChange} />
-                    <TextField name="created" label="Fecha de creación" fullWidth onChange={handleChange} />
-                    <TextField name="image" label="URL de la imagen" fullWidth onChange={handleChange} />
+                    <TextField name="title" label="Título" fullWidth onChange={handleChange} sx={{ mb: 2 }} />
+                    <TextField name="author" label="Autor" fullWidth onChange={handleChange} sx={{ mb: 2 }} />
+                    <TextField name="created" label="Fecha de creación" fullWidth onChange={handleChange} sx={{ mb: 2 }} />
+                    <Grid container spacing={2} alignItems="center" sx={{ mb: 2 }}>
+                        <Grid item xs={8}>
+                            <TextField
+                                type="file"
+                                name="imageFile"
+                                fullWidth
+                                onChange={(event) => setNewBookImage(event.target.files[0])}
+                            />
+                        </Grid>
+                        <Grid item xs={4}>
+                            <Typography variant="body1" sx={{ pl: 1 }}>{newBookImage ? newBookImage.name : 'Ningún archivo seleccionado'}</Typography>
+                        </Grid>
+                    </Grid>
                     <Button onClick={handleAddBook} variant="contained" sx={{ mt: 2 }}>Agregar</Button>
                 </Box>
             </Modal>
+
             <Grid container spacing={3} sx={{ marginTop: 4 }}>
                 {books.map((book) => (
                     <Grid item xs={12} sm={6} md={4} key={book.id}>

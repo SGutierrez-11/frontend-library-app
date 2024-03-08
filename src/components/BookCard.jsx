@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { IconButton, Card, CardContent, Typography, CardActions, Modal, Box, TextField, Button } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ChangeCircleIcon from '@mui/icons-material/ChangeCircle';
@@ -7,6 +7,20 @@ import axios from 'axios';
 const BookCard = ({ book, onUpdate, onDelete }) => {
     const [showUpdateModal, setShowUpdateModal] = useState(false);
     const [updatedBook, setUpdatedBook] = useState(book);
+    const [bookImage, setBookImage] = useState('');
+
+    useEffect(() => {
+        const fetchBookImage = async () => {
+            try {
+                const response = await axios.get(`http://localhost:5087/api/Image/${book.image}`);
+                setBookImage(response.data);
+            } catch (error) {
+                console.error('Error fetching book image:', error);
+            }
+        };
+
+        fetchBookImage();
+    }, [book.image]);
 
     const handleUpdateBook = async () => {
         try {
@@ -14,6 +28,11 @@ const BookCard = ({ book, onUpdate, onDelete }) => {
             // Cerrar el modal después de la actualización y actualizar los libros
             setShowUpdateModal(false);
             onUpdate(); // Actualizar la lista de libros
+            // Actualizar la imagen si se cambió
+            if (updatedBook.image !== book.image) {
+                const response = await axios.get(`http://localhost:5087/api/Image/${updatedBook.image}`);
+                setBookImage(response.data);
+            }
         } catch (error) {
             console.error('Error updating book:', error);
         }
@@ -24,6 +43,9 @@ const BookCard = ({ book, onUpdate, onDelete }) => {
             await axios.delete(`http://localhost:5087/api/Book/${book.id}`);
             // Llamar a la función de eliminación pasada como prop
             onDelete(book.id);
+
+            // Eliminar la imagen asociada al libro
+            await axios.delete(`http://localhost:5087/api/Image/${book.image}`);
         } catch (error) {
             console.error('Error deleting book:', error);
         }
@@ -36,7 +58,7 @@ const BookCard = ({ book, onUpdate, onDelete }) => {
 
     return (
         <Card>
-            <img src={book.image} alt={book.title} style={{ width: '100%' }} />
+            <img src={bookImage} alt={book.title} style={{ width: '100%' }} />
             <CardContent>
                 <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold', fontSize: 18 }}>
                     {book.title}
