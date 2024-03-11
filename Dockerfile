@@ -8,7 +8,7 @@ COPY package.json yarn.lock ./
 RUN yarn install
 # Copy the rest of the application code to the working directory
 COPY . .
-EXPOSE 5173
+#EXPOSE 5173
 # Build the application
 RUN yarn run build 
 
@@ -21,5 +21,7 @@ FROM nginx:alpine
 ADD ./config/default.conf /etc/nginx/conf.d/default.conf
 
 COPY --from=build /app/dist /var/www/app/
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
 EXPOSE 80
-CMD ["nginx","-g", "daemon off;"]
+CMD ["/start.sh"]
