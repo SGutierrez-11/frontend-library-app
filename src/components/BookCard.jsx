@@ -4,6 +4,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ChangeCircleIcon from '@mui/icons-material/ChangeCircle';
 import axios from 'axios';
 
+const backend = import.meta.env.VITE_BACKEND;
+
 const BookCard = ({ book, onUpdate, onDelete }) => {
     const [showUpdateModal, setShowUpdateModal] = useState(false);
     const [updatedBook, setUpdatedBook] = useState(book);
@@ -12,7 +14,7 @@ const BookCard = ({ book, onUpdate, onDelete }) => {
     useEffect(() => {
         const fetchBookImage = async () => {
             try {
-                const response = await axios.get(`http://localhost:5087/api/Image/${book.image}`);
+                const response = await axios.get(`${backend}/api/Image/${book.image}`);
                 setBookImage(response.data);
             } catch (error) {
                 console.error('Error fetching book image:', error);
@@ -24,13 +26,13 @@ const BookCard = ({ book, onUpdate, onDelete }) => {
 
     const handleUpdateBook = async () => {
         try {
-            await axios.put(`http://localhost:5087/api/Book/${updatedBook.id}`, updatedBook);
+            await axios.put(`${backend}/api/Book/${updatedBook.id}`, updatedBook);
             // Cerrar el modal después de la actualización y actualizar los libros
             setShowUpdateModal(false);
             onUpdate(); // Actualizar la lista de libros
             // Actualizar la imagen si se cambió
             if (updatedBook.image !== book.image) {
-                const response = await axios.get(`http://localhost:5087/api/Image/${updatedBook.image}`);
+                const response = await axios.get(`${backend}/api/Image/${updatedBook.image}`);
                 setBookImage(response.data);
             }
         } catch (error) {
@@ -40,12 +42,12 @@ const BookCard = ({ book, onUpdate, onDelete }) => {
 
     const handleDeleteBook = async () => {
         try {
-            await axios.delete(`http://localhost:5087/api/Book/${book.id}`);
+            await axios.delete(`${backend}/api/Book/${book.id}`);
             // Llamar a la función de eliminación pasada como prop
             onDelete(book.id);
 
             // Eliminar la imagen asociada al libro
-            await axios.delete(`http://localhost:5087/api/Image/${book.image}`);
+            await axios.delete(`${backend}/api/Image/${book.image}`);
         } catch (error) {
             console.error('Error deleting book:', error);
         }

@@ -3,6 +3,9 @@ import { Container, Grid, Button, Modal, Box, TextField, Typography } from '@mui
 import axios from 'axios';
 import BookCard from './components/BookCard';
 
+
+const backend = import.meta.env.VITE_BACKEND;
+
 const App = () => {
     const [books, setBooks] = useState([]);
     const [showAddBookModal, setShowAddBookModal] = useState(false);
@@ -12,7 +15,7 @@ const App = () => {
     useEffect(() => {
         const fetchBooks = async () => {
             try {
-                const response = await axios.get('http://localhost:5087/api/Book');
+                const response = await axios.get(`${backend}/api/Book`);
                 setBooks(response.data);
             } catch (error) {
                 console.error('Error fetching books:', error);
@@ -33,14 +36,14 @@ const App = () => {
             };
 
             // Primero, enviamos el libro al backend sin la imagen
-            await axios.post('http://localhost:5087/api/Book', formattedNewBook);
+            await axios.post(`${backend}/api/Book`, formattedNewBook);
 
             // Si hay una imagen seleccionada, la subimos al backend
             if (newBookImage) {
                 const formData = new FormData();
                 formData.append('file', newBookImage);
 
-                await axios.post('http://localhost:5087/api/Image', formData, {
+                await axios.post(`${backend}/api/Image`, formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data'
                     }
@@ -48,9 +51,9 @@ const App = () => {
             }
 
             // Después de subir el libro y la imagen (si existe), actualizamos la lista de libros
-            const response = await axios.get('http://localhost:5087/api/Book');
+            const response = await axios.get(`${backend}/api/Book`);
             setBooks(response.data);
-
+            
             // Limpiamos los estados
             setShowAddBookModal(false);
             setNewBook({});
@@ -62,7 +65,7 @@ const App = () => {
 
     const handleUpdateBook = async () => {
         try {
-            const response = await axios.get('http://localhost:5087/api/Book');
+            const response = await axios.get(`${backend}/api/Book`);
             setBooks(response.data);
         } catch (error) {
             console.error('Error updating books:', error);
@@ -71,7 +74,7 @@ const App = () => {
 
     const handleDeleteBook = async (id) => {
         try {
-            const response = await axios.get('http://localhost:5087/api/Book');
+            const response = await axios.get(`${backend}/api/Book`);
             setBooks(response.data);
         } catch (error) {
             console.error('Error deleting books:', error);
@@ -118,11 +121,11 @@ const App = () => {
             </Modal>
 
             <Grid container spacing={3} sx={{ marginTop: 4 }}>
-                {books.map((book) => (
+            {Array.isArray(books) ? books.map((book) => (
                     <Grid item xs={12} sm={6} md={4} key={book.id}>
                         <BookCard book={book} onUpdate={handleUpdateBook} onDelete={handleDeleteBook} />
                     </Grid>
-                ))}
+                )) : <></>}
             </Grid>
         </Container>
     );

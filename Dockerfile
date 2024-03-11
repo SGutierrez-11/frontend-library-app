@@ -12,7 +12,7 @@ EXPOSE 5173
 # Build the application
 RUN yarn run build 
 
-ENV LIBRARY_API_BACKEND_ADDRESS=http://backend-library-app-backend-library-app-1:8080
+ENV BACKEND=http://localhost:8080
 #Stage 2
 
 # Use nginx image as the base image for serving static filesdocker
