@@ -18,22 +18,37 @@ const BookCard = ({ book, onUpdate, onDelete }) => {
             if (updatedBook.file) {
                 const formData = new FormData();
                 formData.append('file', updatedBook.file);
-    
-                const response = await axios.put(`${backend}/api/Image/${updatedBook.image}`, formData, {
+                const oldImage = book.image.split('/')[7].split('?')[0].split('%2F')[1]
+                console.log(oldImage)
+                const response = await axios.put(`${backend}/api/Image/${oldImage}`, formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data'
                     }
                 });
     
                 // Obtener la URL de la imagen actualizada
+                console.log(response.data)
                 const imageUrl = response.data;
-    
-                // Actualizar el estado con la nueva URL de la imagen
+                const formattedNewBook = {
+                    id: updatedBook.id,
+                    title: updatedBook.title,
+                    author: updatedBook.author,
+                    created: updatedBook.created,
+                    image: imageUrl
+                };
+
                 setUpdatedBook({ ...updatedBook, image: imageUrl });
+                console.log(updatedBook)
+                
+                await axios.put(`${backend}/api/Book/${updatedBook.id}`, formattedNewBook);
+                // Actualizar el estado con la nueva URL de la imagen
+                
+            }else{
+                await axios.put(`${backend}/api/Book/${updatedBook.id}`, updatedBook);
             }
     
             // Enviar la solicitud de actualización del libro al backend
-            await axios.put(`${backend}/api/Book/${updatedBook.id}`, updatedBook);
+            
     
             // Cerrar el modal después de la actualización y actualizar los libros
             setShowUpdateModal(false);
@@ -46,7 +61,9 @@ const BookCard = ({ book, onUpdate, onDelete }) => {
 
     const handleDeleteBook = async () => {
         try {
-            await axios.delete(`${backend}/api/Image/${book.image}`);
+            const newImage = book.image.split('/')[7].split('?')[0].split('%2F')[1]
+            console.log(newImage)
+            await axios.delete(`${backend}/api/Image/${newImage}`);
             await axios.delete(`${backend}/api/Book/${book.id}`);
             onDelete(book.id);
         } catch (error) {
@@ -63,6 +80,8 @@ const BookCard = ({ book, onUpdate, onDelete }) => {
         const file = event.target.files[0];
         setUpdatedBook({ ...updatedBook, file });
     };
+
+
 
     return (
         <Card>
