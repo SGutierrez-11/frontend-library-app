@@ -26,41 +26,46 @@ const App = () => {
     }, []);
 
     const handleAddBook = async () => {
-        try {
-            const formattedNewBook = {
-                id: 0,
-                title: newBook.title,
-                author: newBook.author,
-                created: newBook.created,
-                image: newBookImage ? newBookImage.name : ''
-            };
 
-            // Primero, enviamos el libro al backend sin la imagen
-            await axios.post(`${backend}/api/Book`, formattedNewBook);
+        // Si hay una imagen seleccionada, la subimos al backend
+        if (newBookImage) {
+            const formData = new FormData();
+            formData.append('file', newBookImage);
 
-            // Si hay una imagen seleccionada, la subimos al backend
-            if (newBookImage) {
-                const formData = new FormData();
-                formData.append('file', newBookImage);
+            const urlImage = await axios.post(`${backend}/api/Image`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            console.log('Url de la imagen: ', urlImage);
+            try {
+                const formattedNewBook = {
+                    id: 0,
+                    title: newBook.title,
+                    author: newBook.author,
+                    created: newBook.created,
+                    image: urlImage.data
+                };
 
-                await axios.post(`${backend}/api/Image`, formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data'
-                    }
-                });
+                // Primero, enviamos el libro al backend sin la imagen
+                await axios.post(`${backend}/api/Book`, formattedNewBook);
+
+                // Después de subir el libro y la imagen (si existe), actualizamos la lista de libros
+                const response = await axios.get(`${backend}/api/Book`);
+                setBooks(response.data);
+
+                // Limpiamos los estados
+                setShowAddBookModal(false);
+                setNewBook({});
+                setNewBookImage(null);
+            } catch (error) {
+                console.error('Error adding book:', error);
             }
-
-            // Después de subir el libro y la imagen (si existe), actualizamos la lista de libros
-            const response = await axios.get(`${backend}/api/Book`);
-            setBooks(response.data);
-            
-            // Limpiamos los estados
-            setShowAddBookModal(false);
-            setNewBook({});
-            setNewBookImage(null);
-        } catch (error) {
-            console.error('Error adding book:', error);
         }
+
+
+
+
     };
 
     const handleUpdateBook = async () => {
@@ -121,11 +126,11 @@ const App = () => {
             </Modal>
 
             <Grid container spacing={3} sx={{ marginTop: 4 }}>
-            {Array.isArray(books) ? books.map((book) => (
+                {Array.isArray(books) ? books.map((book) => (
                     <Grid item xs={12} sm={6} md={4} key={book.id}>
                         <BookCard book={book} onUpdate={handleUpdateBook} onDelete={handleDeleteBook} />
                     </Grid>
-                )) : <></>}
+                )) : <></>}
             </Grid>
         </Container>
     );
